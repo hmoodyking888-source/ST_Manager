@@ -2,14 +2,16 @@ plugins {
     id("com.android.application")
     id("kotlin-android")
     id("dev.flutter.flutter-gradle-plugin")
-    // تفعيل الفايربيس هنا في نظام الأندرويد الجديد
-    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.sultan.stn_manager" // 👈 تم التحديث ليطابق الفايربيس
+    // اسم الحزمة الصحيح لتطبيقك
+    namespace = "com.sultan.stn_manager" 
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = "28.2.13676358"
+    
+    // إصدار الـ NDK المطلوب للسيرفر السحابي
+    ndkVersion = "28.2.13676358" 
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -20,17 +22,16 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.sultan.stn_manager" // 👈 تم التحديث ليطابق الفايربيس
+        applicationId = "com.sultan.stn_manager"
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+        targetSdk = flutter.targetSdk
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
     buildTypes {
         release {
-            // Signing with the debug keys for now, so flutter run --release works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName("debug") // أو الـ release الخاص بك
         }
     }
 }

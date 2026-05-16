@@ -1,0 +1,45 @@
+name: Build Sultan Net APK
+
+# تشغيل البناء تلقائياً بمجرد رفع الكود إلى فرع main
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    # 1. جلب الكود من المستودع
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    # 2. تثبيت الجافا (مهم جداً للـ Gradle)
+    - name: Set up Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'zulu'
+        java-version: '17'
+
+    # 3. تثبيت بيئة فلاتر
+    - name: Set up Flutter
+      uses: subosito/flutter-action@v2
+      with:
+        channel: 'stable'
+
+    # 4. جلب المكتبات والاعتمادات
+    - name: Install dependencies
+      run: flutter pub get
+
+    # 5. بناء نسخة الـ APK النهائية
+    - name: Build APK Release
+      run: flutter build apk --release
+
+    # 6. حفظ ملف الـ APK داخل جيت هاب لتقوم بتحميله
+    - name: Upload APK Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: sultan-net-app
+        path: build/app/outputs/flutter-apk/app-release.apk

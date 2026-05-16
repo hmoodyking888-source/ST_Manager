@@ -16,9 +16,17 @@ workflows:
           flutter pub get
       - name: Build Android APK
         script: |
+          # 1. إنشاء مجلد مخصص ومستقل تماماً خارج مجلدات البناء الافتراضية
+          mkdir -p $CM_BUILD_DIR/custom_output
+
+          # 2. تشغيل أمر بناء الـ APK للنسخة النهائية
           flutter build apk --release
+
+          # 3. فكرتك الذكية: نسخ الملف فوراً بعد التجميع مباشرة إلى المجلد المخصص
+          cp build/app/outputs/flutter-apk/app-release.apk $CM_BUILD_DIR/custom_output/sultan_net.apk || true
+          
+          # 4. خطة احتياطية: لو تاه الملف في أي مسار آخر، ابحث عنه وانقله فوراً
+          find build -name "*.apk" -exec cp {} $CM_BUILD_DIR/custom_output/sultan_net.apk \; || true
     artifacts:
-      # تم تعديل المسار هنا ليشمل المجلد العام ومجلد التطبيق لضمان قنص الـ APK أينما وُجد
-      - build/app/outputs/flutter-apk/*.apk
-      - build/app/outputs/bundle/release/*.aab
-      - build/**/*.apk
+      # إجبار Codemagic على قراءة المجلد المخصص المضمون وإظهاره في خانة Artifacts
+      - custom_output/*.apk

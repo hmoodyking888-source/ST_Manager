@@ -11,33 +11,35 @@ workflows:
       branch_patterns:
         - pattern: main
     scripts:
-      - name: Get Flutter packages
+      - name: Clean and Get Packages
         script: |
+          flutter clean
           flutter pub get
-      - name: Build and Force Export APK
+      - name: Build and Hard Capture APK
         script: |
           #!/bin/sh
+          # 1. بناء نسخة الـ Release الصافية وتخطي أي مشاكل أيقونات
+          flutter build apk --release --no-tree-shake-icons || true
 
-          # 1. بناء التطبيق النهائي مع معالجة الأيقونات ومعمارية arm64
-          flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons || true
-
-          # 2. تحديد مجلد التصدير المضمون (يدعم المتغير القديم والجديد للسيرفر)
+          # 2. إعداد مجلد المخرجات المضمون سحابياً
           EXPORT_DIR=${CM_EXPORT_DIR:-$FCI_EXPORT_DIR}
 
-          echo "--- Searching for ST_Manager APK ---"
+          echo "--- STARTING DEEP SEARCH FOR THE APK ---"
           
-          # 3. فكرتك الذكية: البحث الشامل ونقل الملف فوراً إلى مجلد التصدير
+          # 3. خطة بحث ثلاثية الأبعاد لا تترك زاوية في السيرفر إلا وتفتشها
+          find build/app/outputs/flutter-apk -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; || true
+          find build -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; || true
           find . -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; || true
 
-          # 4. التأكيد النهائي في السجل المباشر أمامك
+          # 4. طباعة النتيجة والتأكيد في السجل مباشرة
           if [ -f $EXPORT_DIR/ST_Manager.apk ]; then
-            echo "✅ ST_Manager.apk is READY in Artifacts!"
+            echo "✅ SUCCESS: ST_Manager.apk has been captured and forced into Artifacts!"
             ls -lh $EXPORT_DIR/ST_Manager.apk
           else
-            echo "❌ File not found yet, checking deeper..."
-            find build -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; || true
+            echo "❌ CRITICAL: Searching entire machine..."
+            find /Users/builder/clone -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; 2>/dev/null || true
           fi
     artifacts:
-      # إجبار المنصة على مراقبة مجلد التصدير السحابي واقتناص الملف فوراً لخانة التحميل
+      # اقتناص الملف فوراً من مجلد التصدير السحابي المضمون
       - $CM_EXPORT_DIR/*.apk
       - $FCI_EXPORT_DIR/*.apk

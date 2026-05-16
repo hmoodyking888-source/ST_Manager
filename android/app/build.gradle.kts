@@ -9,7 +9,7 @@ plugins {
 android {
     namespace = "com.sultan.stn_manager" // 👈 تم التحديث ليطابق الفايربيس
     compileSdk = flutter.compileSdkVersion
-
+    ndkVersion = "28.2.13676358"
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8

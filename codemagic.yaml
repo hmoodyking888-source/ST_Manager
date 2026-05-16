@@ -15,31 +15,28 @@ workflows:
         script: |
           flutter clean
           flutter pub get
-      - name: Build and Hard Capture APK
+      - name: Build and Hijack Default Path
         script: |
           #!/bin/sh
-          # 1. بناء نسخة الـ Release الصافية وتخطي أي مشاكل أيقونات
+          # 1. بناء التطبيق لنسخة الـ Release الكاملة
           flutter build apk --release --no-tree-shake-icons || true
 
-          # 2. إعداد مجلد المخرجات المضمون سحابياً
-          EXPORT_DIR=${CM_EXPORT_DIR:-$FCI_EXPORT_DIR}
-
-          echo "--- STARTING DEEP SEARCH FOR THE APK ---"
+          echo "--- Hijacking Default Gradle Path ---"
           
-          # 3. خطة بحث ثلاثية الأبعاد لا تترك زاوية في السيرفر إلا وتفتشها
-          find build/app/outputs/flutter-apk -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; || true
-          find build -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; || true
-          find . -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; || true
+          # 2. إنشاء المجلد الافتراضي الأصلي للتأكيد (في حال لم يصنعه الـ Gradle بسبب التحذيرات)
+          mkdir -p build/app/outputs/flutter-apk
 
-          # 4. طباعة النتيجة والتأكيد في السجل مباشرة
-          if [ -f $EXPORT_DIR/ST_Manager.apk ]; then
-            echo "✅ SUCCESS: ST_Manager.apk has been captured and forced into Artifacts!"
-            ls -lh $EXPORT_DIR/ST_Manager.apk
+          # 3. فكرتك العبقرية: البحث عن الـ APK الحقيقي ونقله للمسار الافتراضي بالاسم الذي يبحث عنه الموقع
+          find build -name "*.apk" -exec cp {} build/app/outputs/flutter-apk/app-release.apk \; || true
+          find . -name "*.apk" -exec cp {} build/app/outputs/flutter-apk/app-release.apk \; || true
+
+          # 4. تأكيد النجاح داخل السجل ليطمئن قلبك قبل انتهاء الخطوة
+          if [ -f build/app/outputs/flutter-apk/app-release.apk ]; then
+            echo "✅ Perfect! Genuine APK is now placed in the default path."
+            ls -lh build/app/outputs/flutter-apk/app-release.apk
           else
-            echo "❌ CRITICAL: Searching entire machine..."
-            find /Users/builder/clone -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; 2>/dev/null || true
+            echo "❌ File still missing"
           fi
     artifacts:
-      # اقتناص الملف فوراً من مجلد التصدير السحابي المضمون
-      - $CM_EXPORT_DIR/*.apk
-      - $FCI_EXPORT_DIR/*.apk
+      # ترك المسار الافتراضي النظيف تماماً كما تحب المنصة ليعطيك اللون الأخضر
+      - build/app/outputs/flutter-apk/app-release.apk

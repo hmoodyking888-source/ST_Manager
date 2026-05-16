@@ -14,19 +14,31 @@ workflows:
       - name: Get Flutter packages
         script: |
           flutter pub get
-      - name: Build Android APK
+      - name: Build and Force Export APK
         script: |
-          # 1. إنشاء مجلد مخصص ومستقل تماماً خارج مجلدات البناء الافتراضية
-          mkdir -p $CM_BUILD_DIR/custom_output
-
-          # 2. تشغيل أمر بناء الـ APK للنسخة النهائية
-          flutter build apk --release
-
-          # 3. فكرتك الذكية: نسخ الملف فوراً بعد التجميع مباشرة إلى المجلد المخصص
-          cp build/app/outputs/flutter-apk/app-release.apk $CM_BUILD_DIR/custom_output/sultan_net.apk || true
+          #!/bin/sh
           
-          # 4. خطة احتياطية: لو تاه الملف في أي مسار آخر، ابحث عنه وانقله فوراً
-          find build -name "*.apk" -exec cp {} $CM_BUILD_DIR/custom_output/sultan_net.apk \; || true
+          # 1. بناء التطبيق للنسخة النهائية المستقرة مع معمارية arm64 المشهورة للهواتف
+          flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons || true
+
+          # 2. تحديد مجلد التصدير المضمون في كود ماجيك (يدعم الاسمين القديم والحديث للمتغير)
+          EXPORT_DIR=${CM_EXPORT_DIR:-$FCI_EXPORT_DIR}
+          
+          echo "--- Searching for ST_Manager APK ---"
+          
+          # 3. فكرتك الذكية: البحث الشامل ونقل الملف فوراً إلى مجلد التصدير باسم واضح لشبكتك
+          find build -name "*.apk" -exec cp {} $EXPORT_DIR/Sultan_Net.apk \; || true
+          find . -name "*.apk" -exec cp {} $EXPORT_DIR/Sultan_Net.apk \; || true
+
+          # 4. التأكيد النهائي وطباعة النتيجة في السجل أمامك
+          if [ -f $EXPORT_DIR/Sultan_Net.apk ]; then
+            echo "✅ Sultan_Net.apk is READY in Artifacts!"
+            ls -lh $EXPORT_DIR/Sultan_Net.apk
+          else
+            echo "❌ File not found, making a last desperate search..."
+            find / -name "*release.apk" -exec cp {} $EXPORT_DIR/Sultan_Net.apk \; 2>/dev/null || true
+          fi
     artifacts:
-      # إجبار Codemagic على قراءة المجلد المخصص المضمون وإظهاره في خانة Artifacts
-      - custom_output/*.apk
+      # إجبار المنصة على مراقبة مجلد التصدير السريع واقتناص الملف فوراً
+      - $CM_EXPORT_DIR/*.apk
+      - $FCI_EXPORT_DIR/*.apk

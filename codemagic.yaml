@@ -17,28 +17,27 @@ workflows:
       - name: Build and Force Export APK
         script: |
           #!/bin/sh
-          
-          # 1. بناء التطبيق للنسخة النهائية المستقرة مع معمارية arm64 المشهورة للهواتف
+
+          # 1. بناء التطبيق النهائي مع معالجة الأيقونات ومعمارية arm64
           flutter build apk --release --target-platform android-arm64 --no-tree-shake-icons || true
 
-          # 2. تحديد مجلد التصدير المضمون في كود ماجيك (يدعم الاسمين القديم والحديث للمتغير)
+          # 2. تحديد مجلد التصدير المضمون (يدعم المتغير القديم والجديد للسيرفر)
           EXPORT_DIR=${CM_EXPORT_DIR:-$FCI_EXPORT_DIR}
-          
+
           echo "--- Searching for ST_Manager APK ---"
           
-          # 3. فكرتك الذكية: البحث الشامل ونقل الملف فوراً إلى مجلد التصدير باسم واضح لشبكتك
-          find build -name "*.apk" -exec cp {} $EXPORT_DIR/Sultan_Net.apk \; || true
-          find . -name "*.apk" -exec cp {} $EXPORT_DIR/Sultan_Net.apk \; || true
+          # 3. فكرتك الذكية: البحث الشامل ونقل الملف فوراً إلى مجلد التصدير
+          find . -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; || true
 
-          # 4. التأكيد النهائي وطباعة النتيجة في السجل أمامك
-          if [ -f $EXPORT_DIR/Sultan_Net.apk ]; then
-            echo "✅ Sultan_Net.apk is READY in Artifacts!"
-            ls -lh $EXPORT_DIR/Sultan_Net.apk
+          # 4. التأكيد النهائي في السجل المباشر أمامك
+          if [ -f $EXPORT_DIR/ST_Manager.apk ]; then
+            echo "✅ ST_Manager.apk is READY in Artifacts!"
+            ls -lh $EXPORT_DIR/ST_Manager.apk
           else
-            echo "❌ File not found, making a last desperate search..."
-            find / -name "*release.apk" -exec cp {} $EXPORT_DIR/Sultan_Net.apk \; 2>/dev/null || true
+            echo "❌ File not found yet, checking deeper..."
+            find build -name "*.apk" -exec cp {} $EXPORT_DIR/ST_Manager.apk \; || true
           fi
     artifacts:
-      # إجبار المنصة على مراقبة مجلد التصدير السريع واقتناص الملف فوراً
+      # إجبار المنصة على مراقبة مجلد التصدير السحابي واقتناص الملف فوراً لخانة التحميل
       - $CM_EXPORT_DIR/*.apk
       - $FCI_EXPORT_DIR/*.apk

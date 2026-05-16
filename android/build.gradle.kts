@@ -4,7 +4,6 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        // الإعداد الصحيح والمطوّر للمكتبة الخاصة بالفايربيس بلغة Kotlin
         classpath("com.google.gms:google-services:4.4.2")
     }
 }

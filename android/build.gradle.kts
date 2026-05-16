@@ -1,24 +1,36 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-plugins {
-    // إصدار الأندرويد المطابق لمشروعك
-    id("com.android.application") version "8.11.1" apply false
-    // إصدار كوتلن المطابق لمشروعك
-    id("org.jetbrains.kotlin.android") version "2.2.20" apply false
-    // تم حذف تحديد الإصدار هنا ليقوم فلاتر بإدارة نفسه تلقائياً ومنع التضارب
-    id("dev.flutter.flutter-gradle-plugin") apply false
-    // إضافة الفايربيس المستقرة
-    id("com.google.gms.google-services") version "4.4.2" apply false
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        // الإعداد الصحيح والمطوّر للمكتبة الخاصة بالفايربيس بلغة Kotlin
+        classpath("com.google.gms:google-services:4.4.2")
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        mavenCentral()
+    }
+}
+
+val newBuildDir: Directory =
+    rootProject.layout.buildDirectory
+        .dir("../../build")
+        .get()
+rootProject.layout.buildDirectory.value(newBuildDir)
+
+subprojects {
+    val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
+    project.layout.buildDirectory.value(newSubprojectBuildDir)
+}
+
+subprojects {
+    project.evaluationDependsOn(":app")
 }
 
 tasks.register<Delete>("clean") {
-    delete(rootProject.buildDir)
+    delete(rootProject.layout.buildDirectory)
 }
-# 1. إيقاف تشغيل ديمون Gradle وتحديد حجم الذاكرة له
-org.gradle.daemon=false
-org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
-
-# 2. تقييد ذاكرة ديمون الكوتلن ومنعه من التضخم
-kotlin.daemon.jvm.options=-Xmx1024m
-
-# 3. الحل السحري: إجبار الكوتلن على البناء داخل نفس عملية Gradle بدون فتح ديمون مستقل
-kotlin.compiler.execution.strategy=in-process

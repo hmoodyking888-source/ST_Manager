@@ -13,3 +13,12 @@ plugins {
 tasks.register<Delete>("clean") {
     delete(rootProject.buildDir)
 }
+# 1. إيقاف تشغيل ديمون Gradle وتحديد حجم الذاكرة له
+org.gradle.daemon=false
+org.gradle.jvmargs=-Xmx2048m -XX:MaxMetaspaceSize=512m
+
+# 2. تقييد ذاكرة ديمون الكوتلن ومنعه من التضخم
+kotlin.daemon.jvm.options=-Xmx1024m
+
+# 3. الحل السحري: إجبار الكوتلن على البناء داخل نفس عملية Gradle بدون فتح ديمون مستقل
+kotlin.compiler.execution.strategy=in-process

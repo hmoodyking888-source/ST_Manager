@@ -25,10 +25,10 @@ dependencies:
   flutter_secure_storage: ^9.0.0
 
   # Permissions
-  permission^11.3.1
+  permission_handler: ^11.3.1
 
   # RouterOS API
-  routeros_api: ^1.0.4
+  routeros_api: ^0.1.4
 
   # HTTP
   http: ^1.2.0

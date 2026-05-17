@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    // اسم الحزمة الصحيح لتطبيقك
     namespace = "com.sultan.stn_manager" 
-    compileSdk = flutter.compileSdkVersion
     
-    // إصدار الـ NDK المطلوب للسيرفر السحابي
+    // تم التحديث إلى 36 بناءً على طلب بيئة التشغيل
+    compileSdk = 36
+    
     ndkVersion = "28.2.13676358" 
 
     compileOptions {
@@ -17,21 +17,25 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
     }
 
-    kotlinOptions {
-        jvmTarget = "1.8"
+    // الهيكلية الحديثة والمعتمدة لـ جافا وكوتلن بدلاً من القديمة
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_1_8)
     }
 
     defaultConfig {
         applicationId = "com.sultan.stn_manager"
-        minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdk
+        
+        minSdk = 21
+        // تم التحديث إلى 36 ليتوافق تماماً مع البيئة السحابية
+        targetSdk = 36
+        
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
 
     buildTypes {
         release {
-            signingConfig = signingConfigs.getByName("debug") // أو الـ release الخاص بك
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 }

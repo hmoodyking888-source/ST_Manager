@@ -1,44 +1,35 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_analytics/firebase_analytics.dart';
 
-class FirebaseService {
-  static final FirebaseService _instance = FirebaseService._internal();
-  factory FirebaseService() => _instance;
-  FirebaseService._internal();
+class AppFirebaseService {
+  static final AppFirebaseService _instance = AppFirebaseService._internal();
+  factory AppFirebaseService() => _instance;
+  AppFirebaseService._internal();
 
-  FirebaseFirestore get _db => FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  final FirebaseMessaging _messaging = FirebaseMessaging.instance;
+  final FirebaseCrashlytics _crashlytics = FirebaseCrashlytics.instance;
+  final FirebaseAnalytics _analytics = FirebaseAnalytics.instance;
 
-  static Future<void> init() async {
-    // إذا كنت تستخدم FlutterFire CLI سيكفي:
-    // await Firebase.initializeApp();
-    //
-    // أو إن أردت التهيئة اليدوية ضع خيارات مشروعك هنا:
-    await Firebase.initializeApp();
-  }
+  FirebaseAuth get auth => _auth;
+  FirebaseFirestore get db => _db;
 
-  Future<void> createOrUpdateUser({required String phoneNumber}) async {
-    final doc = _db.collection('users').doc(phoneNumber);
-    final snapshot = await doc.get();
+  Future<void> onUserLoggedIn(User user) async {
+    await _messaging.requestPermission();
+    final fcmToken = await _messaging.getToken();
 
-    if (!snapshot.exists) {
-      final now = DateTime.now();
-      final expiry = now.add(const Duration(days: 3));
-      await doc.set({
-        'phoneNumber': phoneNumber,
-        'startDate': now.toIso8601String(),
-        'expiryDate': expiry.toIso8601String(),
-        'isPaid': false,
-      });
-    }
-  }
+    await _db.collection('users').doc(user.uid).set({
+      'phone': user.phoneNumber,
+      'uid': user.uid,
+      'fcmToken': fcmToken,
+      'updatedAt': FieldValue.serverTimestamp(),
+    }, SetOptions(merge: true));
 
-  Future<Map<String, dynamic>?> getUserData(String phoneNumber) async {
-    final doc = await _db.collection('users').doc(phoneNumber).get();
-    if (!doc.exists) return null;
-    return doc.data();
-  }
-
-  Future<void> setPaid(String phoneNumber, bool isPaid) async {
-    await _db.collection('users').doc(phoneNumber).update({'isPaid': isPaid});
+    await _crashlytics.setUserIdentifier(user.uid);
+    await _analytics.logLogin(loginMethod: 'phone');
   }
 }

@@ -1,39 +1,47 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'routes/app_routes.dart';
-import 'screens/home_screen.dart';
-import 'screens/login_screen.dart';
-import 'screens/notifications_screen.dart';
-import 'screens/reports_screen.dart';
-import 'screens/settings_screen.dart';
-import 'screens/users_screen.dart';
-import 'theme/app_theme.dart';
-import 'services/firebase_service.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:permission_handler/permission_handler.dart';
 
-Future<void> main() async {
+import 'theme/theme.dart';
+import 'ui/screens/home_screen.dart';
+import 'ui/screens/login_screen.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await FirebaseService.init();
-  runApp(const STManagerApp());
+
+  const storage = FlutterSecureStorage();
+
+  // هل المستخدم سجّل دخوله من قبل؟
+  final isLoggedIn = await storage.read(key: 'is_logged_in') == 'true';
+
+  // طلب أذونات التخزين مرة واحدة
+  await _requestStoragePermissions();
+
+  // تهيئة Firebase
+  await Firebase.initializeApp();
+
+  runApp(STManagerApp(isLoggedIn: isLoggedIn));
+}
+
+Future<void> _requestStoragePermissions() async {
+  final status = await Permission.storage.status;
+  if (!status.isGranted) {
+    await Permission.storage.request();
+  }
 }
 
 class STManagerApp extends StatelessWidget {
-  const STManagerApp({super.key});
+  final bool isLoggedIn;
+  const STManagerApp({super.key, required this.isLoggedIn});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ST_Manager',
+      title: 'ST Manager',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme(),
-      initialRoute: AppRoutes.login,
-      routes: {
-        AppRoutes.login: (_) => const LoginScreen(),
-        AppRoutes.home: (_) => const HomeScreen(),
-        AppRoutes.users: (_) => const UsersScreen(),
-        AppRoutes.notifications: (_) => const NotificationsScreen(),
-        AppRoutes.reports: (_) => const ReportsScreen(),
-        AppRoutes.settings: (_) => const SettingsScreen(),
-      },
+      theme: buildAppTheme(),
+      home: isLoggedIn ? const HomeScreen() : const LoginScreen(),
     );
   }
 }
